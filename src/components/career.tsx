@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Briefcase, 
   TrendingUp, 
@@ -25,12 +28,41 @@ import {
   UserCheck,
   Rocket,
   Shield,
-  Star
+  Star,
+  X,
+  FileText,
+  ChevronDown
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const CareerPage = () => {
   const [hoveredJob, setHoveredJob] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    countryCode: "+91",
+    coverLetter: "",
+  });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFormData, setUploadFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    countryCode: "+91",
+    position: "",
+    message: ""
+  });
+  const [uploadFile, setUploadFile] = useState(null);
+  
+  // Create refs for file inputs
+  const fileInputRef = useRef(null);
+  const uploadFileInputRef = useRef(null);
 
   const openings = [
     {
@@ -104,11 +136,174 @@ const CareerPage = () => {
     { icon: Target, title: "Client Centric", desc: "Delivering excellence beyond expectations" },
   ];
 
+  const handleApplyClick = (job) => {
+    setSelectedJob(job);
+    setIsModalOpen(true);
+    setFormData({ name: "", email: "", phone: "", countryCode: "+91", coverLetter: "" });
+    setSelectedFile(null);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && (file.type === "application/pdf" || file.type === "application/msword" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
+      setSelectedFile(file);
+    } else {
+      alert("Please upload PDF or DOC file only");
+      e.target.value = "";
+    }
+  };
+
+  const handleUploadFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && (file.type === "application/pdf" || file.type === "application/msword" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
+      setUploadFile(file);
+    } else {
+      alert("Please upload PDF or DOC file only");
+      e.target.value = "";
+    }
+  };
+
+  const handleFileButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleUploadFileButtonClick = () => {
+    if (uploadFileInputRef.current) {
+      uploadFileInputRef.current.click();
+    }
+  };
+
+  const handleFormChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleUploadFormChange = (e) => {
+    setUploadFormData({ ...uploadFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedFile) {
+      alert("Please upload your resume");
+      return;
+    }
+    
+    setIsSubmitting(true);
+
+    // Prepare email content
+    const emailContent = `
+Job Application for: ${selectedJob?.title}
+
+Applicant Details:
+------------------
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.countryCode} ${formData.phone}
+
+Cover Letter:
+${formData.coverLetter || "No cover letter provided"}
+
+Resume: ${selectedFile ? selectedFile.name : "No file uploaded"}
+
+Applied for: ${selectedJob?.title}
+Application Date: ${new Date().toLocaleString()}
+    `;
+
+    // Create Gmail compose URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=careers@jaca.in&su=Job Application for ${selectedJob?.title} - ${formData.name}&body=${encodeURIComponent(emailContent)}`;
+    
+    // Open Gmail in new tab
+    window.open(gmailUrl, '_blank');
+
+    // Store in localStorage
+    const applications = JSON.parse(localStorage.getItem('jobApplications') || '[]');
+    applications.push({
+      job: selectedJob,
+      applicant: formData,
+      resume: selectedFile?.name,
+      timestamp: new Date().toISOString(),
+      id: Date.now()
+    });
+    localStorage.setItem('jobApplications', JSON.stringify(applications));
+
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setIsModalOpen(false);
+    }, 3000);
+  };
+
+  const handleGeneralUploadSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!uploadFile) {
+      alert("Please upload your resume");
+      return;
+    }
+    
+    setIsSubmitting(true);
+
+    // Prepare email content for general application
+    const emailContent = `
+General Job Application
+
+Applicant Details:
+------------------
+Name: ${uploadFormData.name}
+Email: ${uploadFormData.email}
+Phone: ${uploadFormData.countryCode} ${uploadFormData.phone}
+Position Interested in: ${uploadFormData.position || "Not specified"}
+
+Additional Message:
+${uploadFormData.message || "No additional message"}
+
+Resume: ${uploadFile ? uploadFile.name : "No file uploaded"}
+
+Application Date: ${new Date().toLocaleString()}
+    `;
+
+    // Create Gmail compose URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=careers@jaca.in&su=General Job Application - ${uploadFormData.name}&body=${encodeURIComponent(emailContent)}`;
+    
+    // Open Gmail in new tab
+    window.open(gmailUrl, '_blank');
+
+    // Store in localStorage
+    const applications = JSON.parse(localStorage.getItem('generalApplications') || '[]');
+    applications.push({
+      applicant: uploadFormData,
+      resume: uploadFile?.name,
+      timestamp: new Date().toISOString(),
+      id: Date.now()
+    });
+    localStorage.setItem('generalApplications', JSON.stringify(applications));
+
+    setIsSubmitting(false);
+    
+    // Show success message
+    alert("Resume submitted successfully! Gmail will open for you to send your resume.");
+    
+    // Reset form and close modal
+    setUploadFormData({ name: "", email: "", phone: "", countryCode: "+91", position: "", message: "" });
+    setUploadFile(null);
+    setShowUploadModal(false);
+  };
+
+  const handleOpenUploadModal = () => {
+    setShowUploadModal(true);
+    setUploadFormData({ name: "", email: "", phone: "", countryCode: "+91", position: "", message: "" });
+    setUploadFile(null);
+  };
+
   return (
     <>
       {/* Hero Section with Background Image */}
       <section className="relative overflow-hidden py-24">
-        {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-fixed"
           style={{
@@ -130,18 +325,19 @@ const CareerPage = () => {
               </span>
             </h1>
             <p className="mb-8 text-lg text-gray-200 max-w-2xl">
-              At Jain Anurag & Associates, we're not just building careers — we're shaping the future of finance. 
+              At  KulswamiEnterprise, we're not just building careers — we're shaping the future of finance. 
               Join a team where your potential meets endless opportunities.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 gap-2">
+              <Button 
+                size="lg" 
+                className="bg-white text-gray-900 hover:bg-gray-100 gap-2"
+                onClick={handleOpenUploadModal}
+              >
                 <Upload className="h-4 w-4" />
                 Upload Resume
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 gap-2">
-                <Phone className="h-4 w-4" />
-                Contact HR
-              </Button>
+              
             </div>
           </div>
         </div>
@@ -185,13 +381,11 @@ const CareerPage = () => {
           </div>
 
           <div className="grid gap-8 lg:grid-cols-2">
-            {/* Left side - Values */}
             <div className="space-y-6">
               {values.map(({ icon: Icon, title, desc }, index) => (
                 <div
                   key={title}
                   className="group flex gap-4 rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:shadow-xl hover:-translate-x-1"
-                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex-shrink-0">
                     <div className="rounded-xl bg-primary/10 p-3 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
@@ -206,7 +400,6 @@ const CareerPage = () => {
               ))}
             </div>
 
-            {/* Right side - Culture Image */}
             <div className="relative rounded-2xl overflow-hidden group">
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
@@ -226,7 +419,7 @@ const CareerPage = () => {
         </div>
       </section>
 
-      {/* Benefits Section - Redesigned */}
+      {/* Benefits Section */}
       <section className="bg-gradient-to-br from-gray-50 to-white py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-12 text-center">
@@ -243,7 +436,7 @@ const CareerPage = () => {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {benefits.map(({ icon: Icon, title, desc }, index) => (
+            {benefits.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
                 className="group rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
@@ -259,7 +452,7 @@ const CareerPage = () => {
         </div>
       </section>
 
-      {/* Current Openings Section - Enhanced */}
+      {/* Current Openings Section */}
       <section className="py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-12 text-center">
@@ -313,7 +506,11 @@ const CareerPage = () => {
                   <Badge variant="outline" className="border-primary/30 text-primary">
                     {job.type}
                   </Badge>
-                  <Button size="sm" className="gap-2 group-hover:gap-3 transition-all bg-primary hover:bg-primary/90">
+                  <Button 
+                    size="sm" 
+                    className="gap-2 group-hover:gap-3 transition-all bg-primary hover:bg-primary/90"
+                    onClick={() => handleApplyClick(job)}
+                  >
                     Apply Now
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -324,7 +521,11 @@ const CareerPage = () => {
 
           <div className="mt-12 text-center">
             <p className="text-gray-600 mb-4">Don't see the right fit?</p>
-            <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary hover:text-white">
+            <Button 
+              variant="outline" 
+              className="gap-2 border-primary text-primary hover:bg-primary hover:text-white"
+              onClick={handleOpenUploadModal}
+            >
               <Mail className="h-4 w-4" />
               Send Us Your Resume
             </Button>
@@ -363,7 +564,414 @@ const CareerPage = () => {
         </div>
       </section>
 
-      
+      {/* General Resume Upload Modal */}
+      {showUploadModal && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-fade-in"
+            onClick={() => setShowUploadModal(false)}
+          />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl z-50 animate-slide-up overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-white">Upload Resume</h2>
+                <p className="text-white/80 text-sm mt-1">Submit your application for general consideration</p>
+              </div>
+              <button 
+                onClick={() => setShowUploadModal(false)}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              <form onSubmit={handleGeneralUploadSubmit} className="space-y-5">
+                {/* Name Field */}
+                <div>
+                  <Label className="text-gray-700 font-medium mb-2 block">
+                    Full Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    name="name"
+                    value={uploadFormData.name}
+                    onChange={handleUploadFormChange}
+                    placeholder="John Doe"
+                    className="h-11 rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20"
+                    required
+                  />
+                </div>
+
+                {/* Email Field */}
+                <div>
+                  <Label className="text-gray-700 font-medium mb-2 block">
+                    Email Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    name="email"
+                    type="email"
+                    value={uploadFormData.email}
+                    onChange={handleUploadFormChange}
+                    placeholder="john@example.com"
+                    className="h-11 rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20"
+                    required
+                  />
+                </div>
+
+                {/* Phone Field with Country Code */}
+                <div>
+                  <Label className="text-gray-700 font-medium mb-2 block">
+                    Phone Number <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex gap-3">
+                    <div className="relative">
+                      <select 
+                        name="countryCode"
+                        value={uploadFormData.countryCode}
+                        onChange={handleUploadFormChange}
+                        className="h-11 rounded-lg border border-gray-200 bg-white px-3 pr-8 appearance-none cursor-pointer focus:border-primary focus:ring-primary/20"
+                      >
+                        <option value="+91">+91 (IND)</option>
+                        <option value="+1">+1 (USA)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+61">+61 (AUS)</option>
+                        <option value="+971">+971 (UAE)</option>
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    <Input
+                      name="phone"
+                      type="tel"
+                      value={uploadFormData.phone}
+                      onChange={handleUploadFormChange}
+                      placeholder="Enter Phone Number"
+                      className="flex-1 h-11 rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Position Interested In */}
+                <div>
+                  <Label className="text-gray-700 font-medium mb-2 block">
+                    Position Interested In (Optional)
+                  </Label>
+                  <select
+                    name="position"
+                    value={uploadFormData.position}
+                    onChange={handleUploadFormChange}
+                    className="w-full h-11 rounded-lg border border-gray-200 bg-white px-3 focus:border-primary focus:ring-primary/20"
+                  >
+                    <option value="">Select a position</option>
+                    <option value="Manager Finance-CA">Manager Finance-CA</option>
+                    <option value="Sr Executive Finance">Sr Executive Finance</option>
+                    <option value="Assistant Manager">Assistant Manager</option>
+                    <option value="Tax Consultant">Tax Consultant</option>
+                    <option value="Audit Associate">Audit Associate</option>
+                    <option value="GST Specialist">GST Specialist</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {/* Additional Message */}
+                <div>
+                  <Label className="text-gray-700 font-medium mb-2 block">
+                    Additional Message (Optional)
+                  </Label>
+                  <Textarea
+                    name="message"
+                    value={uploadFormData.message}
+                    onChange={handleUploadFormChange}
+                    placeholder="Tell us why you'd like to join our team..."
+                    className="min-h-[100px] rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20 resize-none"
+                  />
+                </div>
+
+                {/* Resume Upload */}
+                <div>
+                  <Label className="text-gray-700 font-medium mb-2 block">
+                    Upload Resume <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                    <input
+                      ref={uploadFileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleUploadFileChange}
+                      className="hidden"
+                    />
+                    <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 mb-1">
+                      {uploadFile ? uploadFile.name : "No file selected"}
+                    </p>
+                    <p className="text-xs text-gray-400 mb-3">
+                      Supported formats: PDF, DOC, DOCX (Max 5MB)
+                    </p>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleUploadFileButtonClick}
+                      className="cursor-pointer"
+                    >
+                      Choose File
+                    </Button>
+                  </div>
+                </div>
+
+                {/* reCAPTCHA Placeholder */}
+                <div className="bg-gray-100 rounded-lg p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white rounded border border-gray-300 flex items-center justify-center">
+                    <input type="checkbox" className="w-4 h-4" required />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-700 font-medium">I'm not a robot</p>
+                    <p className="text-xs text-gray-500">reCAPTCHA</p>
+                  </div>
+                  <img 
+                    src="https://www.gstatic.com/recaptcha/api2/logo_48.png" 
+                    alt="reCAPTCHA" 
+                    className="ml-auto h-8"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 gap-2 h-12 text-base"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Application →
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Job Application Modal */}
+      {isModalOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-fade-in"
+            onClick={() => setIsModalOpen(false)}
+          />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl z-50 animate-slide-up overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-white">Apply For Job</h2>
+                <p className="text-white/80 text-sm mt-1">{selectedJob?.title}</p>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {isSubmitted ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Application Submitted!</h3>
+                  <p className="text-gray-600">Your application for {selectedJob?.title} has been sent successfully.</p>
+                  <p className="text-gray-500 text-sm mt-2">Gmail will open for you to send your resume.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Name Field */}
+                  <div>
+                    <Label className="text-gray-700 font-medium mb-2 block">
+                      Enter Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleFormChange}
+                      placeholder="John Doe"
+                      className="h-11 rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20"
+                      required
+                    />
+                  </div>
+
+                  {/* Email Field */}
+                  <div>
+                    <Label className="text-gray-700 font-medium mb-2 block">
+                      Enter Email <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleFormChange}
+                      placeholder="john@example.com"
+                      className="h-11 rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20"
+                      required
+                    />
+                  </div>
+
+                  {/* Phone Field with Country Code */}
+                  <div>
+                    <Label className="text-gray-700 font-medium mb-2 block">
+                      Phone Number <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="flex gap-3">
+                      <div className="relative">
+                        <select 
+                          name="countryCode"
+                          value={formData.countryCode}
+                          onChange={handleFormChange}
+                          className="h-11 rounded-lg border border-gray-200 bg-white px-3 pr-8 appearance-none cursor-pointer focus:border-primary focus:ring-primary/20"
+                        >
+                          <option value="+91">+91 (IND)</option>
+                          <option value="+1">+1 (USA)</option>
+                          <option value="+44">+44 (UK)</option>
+                          <option value="+61">+61 (AUS)</option>
+                          <option value="+971">+971 (UAE)</option>
+                        </select>
+                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                      <Input
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleFormChange}
+                        placeholder="Enter Phone Number"
+                        className="flex-1 h-11 rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cover Letter */}
+                  <div>
+                    <Label className="text-gray-700 font-medium mb-2 block">
+                      Cover Letter (Optional)
+                    </Label>
+                    <Textarea
+                      name="coverLetter"
+                      value={formData.coverLetter}
+                      onChange={handleFormChange}
+                      placeholder="Tell us why you're interested in this position..."
+                      className="min-h-[100px] rounded-lg border-gray-200 focus:border-primary focus:ring-primary/20 resize-none"
+                    />
+                  </div>
+
+                  {/* Resume Upload */}
+                  <div>
+                    <Label className="text-gray-700 font-medium mb-2 block">
+                      Upload Resume <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 mb-1">
+                        {selectedFile ? selectedFile.name : "No file selected"}
+                      </p>
+                      <p className="text-xs text-gray-400 mb-3">
+                        Supported formats: PDF, DOC, DOCX (Max 5MB)
+                      </p>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleFileButtonClick}
+                        className="cursor-pointer"
+                      >
+                        Choose File
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* reCAPTCHA Placeholder */}
+                  <div className="bg-gray-100 rounded-lg p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white rounded border border-gray-300 flex items-center justify-center">
+                      <input type="checkbox" className="w-4 h-4" required />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-700 font-medium">I'm not a robot</p>
+                      <p className="text-xs text-gray-500">reCAPTCHA</p>
+                    </div>
+                    <img 
+                      src="https://www.gstatic.com/recaptcha/api2/logo_48.png" 
+                      alt="reCAPTCHA" 
+                      className="ml-auto h-8"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 gap-2 h-12 text-base"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        Submit →
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -40%);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </>
   );
 };

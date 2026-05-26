@@ -16,6 +16,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const AboutSection = () => {
   const [hoveredStat, setHoveredStat] = useState(null);
@@ -127,9 +128,11 @@ const AboutSection = () => {
             </div>
 
             {/* CTA Button */}
-            <Button className="group gap-2 bg-primary hover:bg-primary/90">
-              Learn More About Us
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <Button asChild className="group gap-2 bg-primary hover:bg-primary/90">
+              <Link to="/about">
+                Learn More About Us
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
             </Button>
           </div>
 

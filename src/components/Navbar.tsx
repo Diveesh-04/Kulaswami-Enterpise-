@@ -58,7 +58,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", href: "/", type: "route" },
     { name: "Services", href: "#services", type: "hash" },
-    { name: "About Us", href: "#about", type: "hash" },
+    { name: "About Us", href: "/about", type: "route" },
     { name: "Knowledge Center", href: "/knowledge-center", type: "route" },
     { name: "Career", href: "/career", type: "route" },
     { name: "Contact", href: "#contact", type: "hash" },
@@ -119,16 +119,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden items-center gap-4 lg:flex">
-            <Button 
-              onClick={handleGetConsultation}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md hover:shadow-lg transition-all duration-300 rounded-full px-6"
-            >
-              Get Consultation
-            </Button>
-          </div>
-
+         
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -196,21 +187,15 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* Mobile CTA */}
-            <div className="mt-8 border-t border-gray-100 pt-6 px-4">
-              <Button 
-                onClick={handleGetConsultation}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 rounded-full"
-              >
-                Get Consultation
-              </Button>
+         
+              
               <p className="mt-4 text-center text-xs text-gray-500">
                 Since 2009 | Trusted by 500+ Clients
               </p>
             </div>
           </div>
         </div>
-      </div>
+      
 
       {/* Spacer to prevent content from hiding under fixed navbar */}
       <div className="h-[73px] lg:h-[81px]" />

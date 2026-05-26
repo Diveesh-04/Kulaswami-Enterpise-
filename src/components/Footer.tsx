@@ -19,11 +19,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
+  const handleEmailClick = () => {
+    // Open Gmail compose window
+    const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=kulswamienterprisegdcaf@gmail.com&su=Inquiry from Website";
+    window.open(gmailUrl, '_blank');
+  };
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
   const quickLinks = [
-    { name: "About Us", href: "/#about", type: "hash" },
+    { name: "About Us", href: "/about", type: "route" },
     { name: "Our Services", href: "/#services", type: "hash" },
     { name: "Knowledge Center", href: "/knowledge-center", type: "route" },
     { name: "Career", href: "/career", type: "route" },
@@ -165,18 +170,22 @@ const Footer = () => {
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 group-hover:bg-primary/20 transition-colors">
                     <Phone className="h-4 w-4 text-primary" />
                   </div>
-                  <a href="tel:+918830485913" className="hover:text-primary transition-colors">
-                    +91 8830485913
+                  <a  className="hover:text-primary transition-colors">
+                    +91 88XXXXXX13
                   </a>
                 </li>
-                <li className="flex items-center gap-3 group">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 group-hover:bg-primary/20 transition-colors">
-                    <Mail className="h-4 w-4 text-primary" />
-                  </div>
-                  <a href="mailto:kulswamienterprisegdcaf@gmail.com" className="hover:text-primary transition-colors break-all">
-                    kulswamienterprisegdcaf@gmail.com
-                  </a>
-                </li>
+    <li className="flex items-center gap-3 group">
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 group-hover:bg-primary/20 transition-colors">
+        <Mail className="h-4 w-4 text-primary" />
+      </div>
+      <a
+        href="#"
+        onClick={handleEmailClick}
+        className="hover:text-primary transition-colors"
+      >
+        kulswamienterprisegdcaf@gmail.com
+      </a>
+    </li>
               </ul>
             </div>
 
@@ -245,7 +254,7 @@ const Footer = () => {
       <div className="border-t border-white/10 bg-black/20">
         <div className="mx-auto max-w-7xl flex flex-col items-center justify-between gap-3 px-6 py-5 text-sm sm:flex-row">
           <span className="text-gray-400 flex items-center gap-1">
-            © 2026 Kulswami Enterprise. 
+            © 2021 Kulswami Enterprise. 
             <span className="hidden sm:inline">All rights reserved.</span>
           </span>
           <div className="flex gap-6">
@@ -259,11 +268,7 @@ const Footer = () => {
               Cookie Policy
             </a>
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <span>Made with</span>
-            <Heart className="h-3 w-3 text-red-500 fill-red-500" />
-            <span>in India</span>
-          </div>
+          
         </div>
       </div>
 
